@@ -1,22 +1,26 @@
 // ✏️ WRITE YOUR CODE IN THIS FILE.
-// The UI is already built for you (see components/SessionCard.jsx — don't edit it).
-// Your job: replace the fake example data with real data from the server.
+// The UI (JSX) is already built for you (see components/SessionCard.jsx — don't edit it).
+// ⚠️ The app will CRASH on first run — the JSX below uses states and handlers
+// that don't exist yet. Your first job is to create them.
 //
 // Your 4 tasks:
 //
-//   1. Keep the sessions list in state, and fetch GET /sessions every 1 second
-//      so timers and badges update live.
+//   1. Create the states the JSX needs:
+//      - a state for the player name input (the JSX calls it `playerName` / `setPlayerName`)
+//      - a state for the sessions list (the JSX calls it `sessions`)
+//      Then fetch GET /sessions every 1 second so timers and badges update live.
 //      (fetch('/sessions') works directly — no full URL needed.)
 //
-//   2. startSession() -> POST /sessions/start with { playerName }.
+//   2. Create a function called startSession -> POST /sessions/start with { playerName }.
 //      Don't allow an empty name. Clear the input after starting.
 //
-//   3. stopSession(id) -> POST /sessions/:id/stop
+//   3. Create a function called stopSession(id) -> POST /sessions/:id/stop
 //
-//   4. addTime(id, minutes) -> POST /sessions/:id/add-time with { minutes }
+//   4. Create a function called addTime(id, minutes) -> POST /sessions/:id/add-time with { minutes }
 //
-// When done, delete EXAMPLE_SESSIONS and show the real sessions
-// (active ones on top, completed ones below).
+// EXAMPLE_SESSIONS below shows how the final UI should look — point `sessions`
+// at it first if you want to see the target UI, then delete it and show the
+// real sessions (active ones on top, completed ones below).
 
 import { useState } from 'react';
 import SessionCard from './components/SessionCard';
@@ -49,25 +53,20 @@ const EXAMPLE_SESSIONS = [
 ];
 
 export default function App() {
-  const [playerName, setPlayerName] = useState('');
+  // TODO 1: create a state for the player name input.
+  //         The JSX below expects it to be called `playerName` / `setPlayerName`.
 
-  // TODO 1: put sessions in state and fetch them every 1 second
-  const sessions = EXAMPLE_SESSIONS;
+  // TODO 1: create a state for the sessions list (the JSX calls it `sessions`),
+  //         then fetch GET /sessions every 1 second to keep it updated.
 
-  // TODO 2: start a new session on the server
-  const startSession = () => {
-    alert('TODO: POST /sessions/start');
-  };
+  // TODO 2: create a function called startSession
+  //         -> POST /sessions/start with { playerName }
 
-  // TODO 3: stop this session on the server
-  const stopSession = (id) => {
-    alert(`TODO: POST /sessions/${id}/stop`);
-  };
+  // TODO 3: create a function called stopSession(id)
+  //         -> POST /sessions/:id/stop
 
-  // TODO 4: add minutes to this session on the server
-  const addTime = (id, minutes) => {
-    alert(`TODO: POST /sessions/${id}/add-time with ${minutes} minutes`);
-  };
+  // TODO 4: create a function called addTime(id, minutes)
+  //         -> POST /sessions/:id/add-time with { minutes }
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">

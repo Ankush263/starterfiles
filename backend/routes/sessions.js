@@ -1,5 +1,6 @@
 // ✏️ WRITE YOUR CODE IN THIS FILE.
-// Fill in the 4 endpoints below. Right now they all return "Not implemented".
+// Create the 4 routes described below. Right now this file has NO routes —
+// the frontend will get 404s until you write them.
 //
 // A session looks like this:
 //   { id, playerName, elapsedMinutes, status: "active" | "completed", badges: [] }
@@ -26,13 +27,23 @@ const crypto = require('crypto'); // crypto.randomUUID() gives you a unique id
 const router = express.Router();
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 
-// TODO: create your in-memory storage here
-// TODO: Uncomment the below code.
-// const activeSessions = new Map(); // id -> session
-// const timers = new Map();         // id -> timer (from setInterval)
+// ---------------------------------------------------------------
+// SESSION MANAGEMENT — uncomment this code to use it.
+// ---------------------------------------------------------------
+// const activeSessions = new Map(); // id -> session object
+// const timers = new Map();         // id -> timer (returned by setInterval)
 
 // ---------------------------------------------------------------
-// 1. POST /sessions/start
+// BADGE THRESHOLDS — uncomment this code to use it.
+// ---------------------------------------------------------------
+// const BADGE_THRESHOLDS = [
+//   { minutes: 30, badge: 'Bronze' },
+//   { minutes: 50, badge: 'Silver' },
+//   { minutes: 70, badge: 'Gold' },
+// ];
+
+// ---------------------------------------------------------------
+// 1. Create a POST route called "start"  (POST /sessions/start)
 //    Body: { "playerName": "Ravi" }
 //
 //    Steps:
@@ -42,12 +53,10 @@ const DATA_FILE = path.join(__dirname, '..', 'data.json');
 //        adds 1 to elapsedMinutes, and gives badges when reached.
 //    - Send back the new session.
 // ---------------------------------------------------------------
-router.post('/start', (req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+// TODO: write the "start" route here
 
 // ---------------------------------------------------------------
-// 2. POST /sessions/:id/stop
+// 2. Create a POST route called ":id/stop"  (POST /sessions/:id/stop)
 //
 //    Steps:
 //    - Find the active session. If not found, send an error (status 404).
@@ -56,12 +65,10 @@ router.post('/start', (req, res) => {
 //    - Save it into data.json using fs.
 //    - Send back the session.
 // ---------------------------------------------------------------
-router.post('/:id/stop', (req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+// TODO: write the "stop" route here
 
 // ---------------------------------------------------------------
-// 3. POST /sessions/:id/add-time
+// 3. Create a POST route called ":id/add-time"  (POST /sessions/:id/add-time)
 //    Body: { "minutes": 30 }
 //
 //    Steps:
@@ -72,19 +79,15 @@ router.post('/:id/stop', (req, res) => {
 //      Example: 25 -> 75 gives Bronze, Silver AND Gold together.
 //    - Send back the updated session.
 // ---------------------------------------------------------------
-router.post('/:id/add-time', (req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+// TODO: write the "add-time" route here
 
 // ---------------------------------------------------------------
-// 4. GET /sessions
+// 4. Create a GET route on "/"  (GET /sessions)
 //
 //    Return one list with:
 //    - active sessions (from memory)
 //    - completed sessions (from data.json)
 // ---------------------------------------------------------------
-router.get('/', (req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+// TODO: write the "list sessions" route here
 
 module.exports = router;
