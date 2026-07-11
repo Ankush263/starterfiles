@@ -5,6 +5,7 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
+const ACTIVE_FILE = path.join(__dirname, '..', 'active_sessions.json');
 
 const activeSessions = new Map();
 const timers = new Map();
@@ -16,6 +17,38 @@ function getBadges(minutes) {
   if (minutes >= 70) badges.push('Gold');
   return badges;
 }
+
+function saveActiveSessions() {
+  const list = Array.from(activeSessions.values());
+  fs.writeFileSync(ACTIVE_FILE, JSON.stringify(list, null, 2));
+}
+
+function startSessionTimer(session) {
+  const timer = setInterval(() => {
+    session.elapsedMinutes += 1;
+    session.badges = getBadges(session.elapsedMinutes);
+  }, 1000);
+  timers.set(session.id, timer);
+}
+
+if (fs.existsSync(ACTIVE_FILE)) {
+  try {
+    const fileData = fs.readFileSync(ACTIVE_FILE, 'utf8');
+    if (fileData.trim()) {
+      const list = JSON.parse(fileData);
+      for (const session of list) {
+        activeSessions.set(session.id, session);
+        startSessionTimer(session);
+      }
+    }
+  } catch (e) {}
+}
+
+setInterval(() => {
+  if (activeSessions.size > 0) {
+    saveActiveSessions();
+  }
+}, 10000);
 
 router.post('/start', (req, res) => {
   const { playerName } = req.body;
@@ -31,11 +64,8 @@ router.post('/start', (req, res) => {
     badges: []
   };
   activeSessions.set(id, session);
-  const timer = setInterval(() => {
-    session.elapsedMinutes += 1;
-    session.badges = getBadges(session.elapsedMinutes);
-  }, 1000);
-  timers.set(id, timer);
+  startSessionTimer(session);
+  saveActiveSessions();
   res.status(201).json(session);
 });
 
@@ -52,6 +82,7 @@ router.post('/:id/stop', (req, res) => {
   }
   session.status = 'completed';
   activeSessions.delete(id);
+  saveActiveSessions();
 
   let completedSessions = [];
   if (fs.existsSync(DATA_FILE)) {
@@ -60,9 +91,7 @@ router.post('/:id/stop', (req, res) => {
       if (fileData.trim()) {
         completedSessions = JSON.parse(fileData);
       }
-    } catch (e) {
-      completedSessions = [];
-    }
+    } catch (e) {}
   }
   completedSessions.push(session);
   fs.writeFileSync(DATA_FILE, JSON.stringify(completedSessions, null, 2));
@@ -82,6 +111,7 @@ router.post('/:id/add-time', (req, res) => {
   }
   session.elapsedMinutes += mins;
   session.badges = getBadges(session.elapsedMinutes);
+  saveActiveSessions();
   res.json(session);
 });
 
@@ -93,9 +123,7 @@ router.get('/', (req, res) => {
       if (fileData.trim()) {
         completedSessions = JSON.parse(fileData);
       }
-    } catch (e) {
-      completedSessions = [];
-    }
+    } catch (e) {}
   }
   const activeList = Array.from(activeSessions.values());
   res.json([...activeList, ...completedSessions]);
