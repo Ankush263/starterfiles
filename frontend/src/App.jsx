@@ -30,21 +30,21 @@ import SessionCard from './components/SessionCard';
 // one active card, one completed card with Gold, one completed card with no badge.
 const EXAMPLE_SESSIONS = [
   {
-    id: 'example-1',
+    id: 'Gamer-1',
     playerName: 'Ravi (example — active)',
     elapsedMinutes: 42,
     status: 'active',
     badges: ['Bronze'],
   },
   {
-    id: 'example-2',
+    id: 'Gamer-2',
     playerName: 'Priya (example — completed)',
     elapsedMinutes: 85,
     status: 'completed',
     badges: ['Bronze', 'Silver', 'Gold'],
   },
   {
-    id: 'example-3',
+    id: 'Gamer-3',
     playerName: 'Arjun (example — no badge)',
     elapsedMinutes: 12,
     status: 'completed',
