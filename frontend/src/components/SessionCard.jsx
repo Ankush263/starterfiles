@@ -39,6 +39,7 @@ export default function SessionCard({ session, onStop, onAddTime }) {
     setMinutes('');
   };
 
+  export deafult fuc
   return (
     <div
       className={`rounded-xl border p-4 shadow-sm transition ${
