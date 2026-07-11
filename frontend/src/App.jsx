@@ -21,39 +21,17 @@
 // EXAMPLE_SESSIONS below shows how the final UI should look — point `sessions`
 // at it first if you want to see the target UI, then delete it and show the
 // real sessions (active ones on top, completed ones below).
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SessionCard from './components/SessionCard';
 
-// 🗑️ FAKE DATA — delete this after you fetch real sessions.
+export default function App() {
+  const [playerName, setPlayerName] = useState('');
+  const [sessions, setSessions] = useState([]);
+
+  // 🗑️ FAKE DATA — delete this after you fetch real sessions.
 // It only exists to show you how the final UI should look:
 // one active card, one completed card with Gold, one completed card with no badge.
-const EXAMPLE_SESSIONS = [
-  {
-    id: 'example-1',
-    playerName: 'Ravi (example — active)',
-    elapsedMinutes: 42,
-    status: 'active',
-    badges: ['Bronze'],
-  },
-  {
-    id: 'example-2',
-    playerName: 'Priya (example — completed)',
-    elapsedMinutes: 85,
-    status: 'completed',
-    badges: ['Bronze', 'Silver', 'Gold'],
-  },
-  {
-    id: 'example-3',
-    playerName: 'Arjun (example — no badge)',
-    elapsedMinutes: 12,
-    status: 'completed',
-    badges: [],
-  },
-];
-
-export default function App() {
-  // TODO 1: create a state for the player name input.
+ // TODO 1: create a state for the player name input.
   //         The JSX below expects it to be called `playerName` / `setPlayerName`.
 
   // TODO 1: create a state for the sessions list (the JSX calls it `sessions`),
@@ -67,6 +45,54 @@ export default function App() {
 
   // TODO 4: create a function called addTime(id, minutes)
   //         -> POST /sessions/:id/add-time with { minutes }
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('/sessions');
+      const data = await res.json();
+      // active sessions first, completed below
+      setSessions([
+        ...data.filter((s) => s.status === 'active'),
+        ...data.filter((s) => s.status === 'completed'),
+      ]);
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+    }
+  };
+
+  // poll every second so live timers and badges stay updated
+  useEffect(() => {
+    fetchSessions();
+    const interval = setInterval(fetchSessions, 1000);
+    return () => clearInterval(interval);// if not used it will become zombie timer 
+  }, []);
+
+  const startSession = async () => {
+    if (!playerName.trim()) return;
+    await fetch('/sessions/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: playerName.trim() }),
+    });
+    setPlayerName('');
+    fetchSessions();
+  };
+
+
+  const stopSession = async (id) => {
+    await fetch(`/sessions/${id}/stop`, { method: 'POST' });
+    fetchSessions();
+  };
+
+  const addTime = async (id, minutes ) => {
+    await fetch(`/sessions/${id}/add-time`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutes }),
+    });
+
+    fetchSessions();
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
