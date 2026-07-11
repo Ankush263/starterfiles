@@ -72,3 +72,6 @@ Everything else is provided: the Express server bootstrap, the Vite/Tailwind set
 ## Bonus (only if you finish early — verbal answer is fine)
 
 What happens to an active session if the server crashes? How would you redesign the timer logic so elapsed time survives a restart?
+My approch for could be like mkae the autoSave after every 10 second lke the chek point thing and also to make sure to save the data of the user
+and also to save the check poinnt of the user so they don't create a new session every time they can join the game. If the user session expires the
+timer automatically stops and save the data of the user and if the user.

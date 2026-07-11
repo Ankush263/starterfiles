@@ -1,72 +1,72 @@
-// ✏️ WRITE YOUR CODE IN THIS FILE.
-// The UI (JSX) is already built for you (see components/SessionCard.jsx — don't edit it).
-// ⚠️ The app will CRASH on first run — the JSX below uses states and handlers
-// that don't exist yet. Your first job is to create them.
-//
-// Your 4 tasks:
-//
-//   1. Create the states the JSX needs:
-//      - a state for the player name input (the JSX calls it `playerName` / `setPlayerName`)
-//      - a state for the sessions list (the JSX calls it `sessions`)
-//      Then fetch GET /sessions every 1 second so timers and badges update live.
-//      (fetch('/sessions') works directly — no full URL needed.)
-//
-//   2. Create a function called startSession -> POST /sessions/start with { playerName }.
-//      Don't allow an empty name. Clear the input after starting.
-//
-//   3. Create a function called stopSession(id) -> POST /sessions/:id/stop
-//
-//   4. Create a function called addTime(id, minutes) -> POST /sessions/:id/add-time with { minutes }
-//
-// EXAMPLE_SESSIONS below shows how the final UI should look — point `sessions`
-// at it first if you want to see the target UI, then delete it and show the
-// real sessions (active ones on top, completed ones below).
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SessionCard from './components/SessionCard';
 
-// 🗑️ FAKE DATA — delete this after you fetch real sessions.
-// It only exists to show you how the final UI should look:
-// one active card, one completed card with Gold, one completed card with no badge.
-const EXAMPLE_SESSIONS = [
-  {
-    id: 'example-1',
-    playerName: 'Ravi (example — active)',
-    elapsedMinutes: 42,
-    status: 'active',
-    badges: ['Bronze'],
-  },
-  {
-    id: 'example-2',
-    playerName: 'Priya (example — completed)',
-    elapsedMinutes: 85,
-    status: 'completed',
-    badges: ['Bronze', 'Silver', 'Gold'],
-  },
-  {
-    id: 'example-3',
-    playerName: 'Arjun (example — no badge)',
-    elapsedMinutes: 12,
-    status: 'completed',
-    badges: [],
-  },
-];
-
 export default function App() {
-  // TODO 1: create a state for the player name input.
-  //         The JSX below expects it to be called `playerName` / `setPlayerName`.
+  const [playerName, setPlayerName] = useState('');
+  const [sessions, setSessions] = useState([]);
 
-  // TODO 1: create a state for the sessions list (the JSX calls it `sessions`),
-  //         then fetch GET /sessions every 1 second to keep it updated.
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('/sessions');
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // TODO 2: create a function called startSession
-  //         -> POST /sessions/start with { playerName }
+  useEffect(() => {
+    fetchSessions();
+    const interval = setInterval(fetchSessions, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // TODO 3: create a function called stopSession(id)
-  //         -> POST /sessions/:id/stop
+  const startSession = async () => {
+    if (!playerName.trim()) return;
+    try {
+      const res = await fetch('/sessions/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName }),
+      });
+      if (res.ok) {
+        setPlayerName('');
+        fetchSessions();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // TODO 4: create a function called addTime(id, minutes)
-  //         -> POST /sessions/:id/add-time with { minutes }
+  const stopSession = async (id) => {
+    try {
+      const res = await fetch(`/sessions/${id}/stop`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        fetchSessions();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addTime = async (id, minutes) => {
+    try {
+      const res = await fetch(`/sessions/${id}/add-time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes }),
+      });
+      if (res.ok) {
+        fetchSessions();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -101,7 +101,6 @@ export default function App() {
               No sessions yet — start one above.
             </p>
           )}
-          {/* Shows one card per session. Active sessions should come first. */}
           {sessions.map((session) => (
             <SessionCard
               key={session.id}
