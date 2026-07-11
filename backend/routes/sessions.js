@@ -28,19 +28,37 @@ const router = express.Router();
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 
 // ---------------------------------------------------------------
-// SESSION MANAGEMENT — uncomment this code to use it.
+// SESSION MANAGEMENT
 // ---------------------------------------------------------------
-// const activeSessions = new Map(); // id -> session object
-// const timers = new Map();         // id -> timer (returned by setInterval)
+const activeSessions = new Map(); // id -> session object
+const timers = new Map();         // id -> timer (returned by setInterval)
 
 // ---------------------------------------------------------------
-// BADGE THRESHOLDS — uncomment this code to use it.
+// BADGE RULES
 // ---------------------------------------------------------------
-// const BADGE_THRESHOLDS = [
-//   { minutes: 30, badge: 'Bronze' },
-//   { minutes: 50, badge: 'Silver' },
-//   { minutes: 70, badge: 'Gold' },
-// ];
+// give badges when the time is reached (>= so Add Time jumps also work)
+function giveBadges(session) {
+  if (session.elapsedMinutes >= 30 && !session.badges.includes('Bronze')) {
+    session.badges.push('Bronze');
+  }
+  if (session.elapsedMinutes >= 50 && !session.badges.includes('Silver')) {
+    session.badges.push('Silver');
+  }
+  if (session.elapsedMinutes >= 70 && !session.badges.includes('Gold')) {
+    session.badges.push('Gold');
+  }
+}
+
+// read completed sessions from data.json (file can be missing or empty)
+function readData() {
+  try {
+    const text = fs.readFileSync(DATA_FILE, 'utf-8');
+    if (text.trim() === '') return [];
+    return JSON.parse(text);
+  } catch (err) {
+    return [];
+  }
+}
 
 // ---------------------------------------------------------------
 // 1. Create a POST route called "start"  (POST /sessions/start)
@@ -53,7 +71,30 @@ const DATA_FILE = path.join(__dirname, '..', 'data.json');
 //        adds 1 to elapsedMinutes, and gives badges when reached.
 //    - Send back the new session.
 // ---------------------------------------------------------------
-// TODO: write the "start" route here
+router.post('/start', (req, res) => {
+  const playerName = req.body.playerName;
+  if (!playerName) {
+    return res.status(400).json({ error: 'player name is required' });
+  }
+
+  const session = {
+    id: crypto.randomUUID(),
+    playerName: playerName,
+    elapsedMinutes: 0,
+    status: 'active',
+    badges: [],
+  };
+  activeSessions.set(session.id, session);
+
+  // 1 real second = 1 game minute
+  const timer = setInterval(() => {
+    session.elapsedMinutes = session.elapsedMinutes + 1;
+    giveBadges(session);
+  }, 1000);
+  timers.set(session.id, timer);
+
+  res.json(session);
+});
 
 // ---------------------------------------------------------------
 // 2. Create a POST route called ":id/stop"  (POST /sessions/:id/stop)
@@ -65,7 +106,24 @@ const DATA_FILE = path.join(__dirname, '..', 'data.json');
 //    - Save it into data.json using fs.
 //    - Send back the session.
 // ---------------------------------------------------------------
-// TODO: write the "stop" route here
+router.post('/:id/stop', (req, res) => {
+  const session = activeSessions.get(req.params.id);
+  if (!session) {
+    return res.status(404).json({ error: 'session not found' });
+  }
+
+  clearInterval(timers.get(session.id));
+  timers.delete(session.id);
+  activeSessions.delete(session.id);
+
+  session.status = 'completed';
+
+  const completed = readData();
+  completed.push(session);
+  fs.writeFileSync(DATA_FILE, JSON.stringify(completed, null, 2));
+
+  res.json(session);
+});
 
 // ---------------------------------------------------------------
 // 3. Create a POST route called ":id/add-time"  (POST /sessions/:id/add-time)
@@ -79,7 +137,17 @@ const DATA_FILE = path.join(__dirname, '..', 'data.json');
 //      Example: 25 -> 75 gives Bronze, Silver AND Gold together.
 //    - Send back the updated session.
 // ---------------------------------------------------------------
-// TODO: write the "add-time" route here
+router.post('/:id/add-time', (req, res) => {
+  const session = activeSessions.get(req.params.id);
+  if (!session) {
+    return res.status(404).json({ error: 'active session not found' });
+  }
+
+  session.elapsedMinutes = session.elapsedMinutes + req.body.minutes;
+  giveBadges(session);
+
+  res.json(session);
+});
 
 // ---------------------------------------------------------------
 // 4. Create a GET route on "/"  (GET /sessions)
@@ -88,6 +156,10 @@ const DATA_FILE = path.join(__dirname, '..', 'data.json');
 //    - active sessions (from memory)
 //    - completed sessions (from data.json)
 // ---------------------------------------------------------------
-// TODO: write the "list sessions" route here
+router.get('/', (req, res) => {
+  const active = [...activeSessions.values()];
+  const completed = readData();
+  res.json([...active, ...completed]);
+});
 
 module.exports = router;
